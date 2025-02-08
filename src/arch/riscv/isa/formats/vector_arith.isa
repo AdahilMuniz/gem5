@@ -61,8 +61,28 @@ let {{
                 %s
             }
         ''' % (upper_bound, code)
+
+
+    def loopMergeWrapper(code, micro_inst = True):
+        if micro_inst:
+            upper_bound = "this->microVl"
+        else:
+            upper_bound = "(uint32_t)machInst.vl"
+        return '''
+            uint32_t cnt = 0;
+            for (uint32_t i = 0; i < %s; i++) {
+                for (uint32_t j = i+1; j < %s; j++){
+                    %s
+                }
+            }
+        ''' % (upper_bound, upper_bound, code)
+
+
     def maskCondWrapper(code):
         return "if (this->vm || elem_mask(v0, ei)) {\n" + \
+               code + "}\n"
+    def maskCondMergeWrapper(code):
+        return "if (this->vm || (elem_mask(v0, ei) && elem_mask(v0, ej))) {\n" + \
                code + "}\n"
     def eiDeclarePrefix(code, widening = False):
         if widening:
@@ -72,6 +92,19 @@ let {{
         else:
             return '''
             uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) * this->microIdx;
+            ''' + code
+    #@NOTE: It's more elegant to create a function to declare ei and another one to declare ej, but it's safer
+    #to do like this, to avoid any unexpected error
+    def eiejDeclarePrefix(code, widening = False):
+        if widening:
+            return '''
+            uint32_t ei = i + micro_vlmax * this->microIdx;
+            uint32_t ej = j + micro_vlmax * this->microIdx;
+            ''' + code
+        else:
+            return '''
+            uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) * this->microIdx;
+            uint32_t ej = j + vtype_VLMAX(vtype, vlen, true) * this->microIdx;
             ''' + code
 
     def wideningOpRegisterConstraintChecks(code):
@@ -199,10 +232,21 @@ def format VectorIntFormat(code, category, *flags) {{
 
     # code
     if mask_cond:
-        code = maskCondWrapper(code)
+        if(inst_name in ["vconv"]):
+            code = maskCondMergeWrapper(code)
+        else:
+            code = maskCondWrapper(code)
     if need_elem_idx:
-        code = eiDeclarePrefix(code)
-    code = loopWrapper(code)
+        if(inst_name in ["vconv"]):
+            code = eiejDeclarePrefix(code)
+        else:
+            code = eiDeclarePrefix(code)
+
+        
+    if(inst_name in ["vconv"]):
+        code = loopMergeWrapper(code, micro_inst=False)
+    else:
+        code = loopWrapper(code)
 
     vm_decl_rd = ""
     if v0_required:
@@ -479,7 +523,11 @@ def format VectorIntMaskFormat(code, category, *flags) {{
         code = maskCondWrapper(code)
     if need_elem_idx:
         code = eiDeclarePrefix(code)
-    code = loopWrapper(code)
+    
+    if(inst_name in ["vconv"]):
+        code = loopMergeWrapper(code, micro_inst=False)
+    else:
+        code = loopWrapper(code)
 
     vm_decl_rd = ""
     if v0_required:

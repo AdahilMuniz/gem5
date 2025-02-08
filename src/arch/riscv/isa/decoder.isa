@@ -2985,6 +2985,14 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] <= Vs1_vi[i]));
                     }}, OPIVV, SimdCmpOp);
                 }
+                format VectorIntFormat {
+                    0x16: vconv_vv({{
+                        if(Vs1_vu[i] == Vs1_vu[j]){
+                            Vd_vu[(cnt)] = Vs2_vu[i] * Vs2_vu[j];
+                            cnt ++;
+                        }
+                    }}, OPIVV, SimdCmpOp);
+                }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wv({{
                         Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
