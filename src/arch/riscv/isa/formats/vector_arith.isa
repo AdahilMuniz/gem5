@@ -244,7 +244,7 @@ def format VectorIntFormat(code, category, *flags) {{
 
         
     if(inst_name in ["vconv"]):
-        code = loopMergeWrapper(code, micro_inst=False)
+        code = loopMergeWrapper(code)
     else:
         code = loopWrapper(code)
 
@@ -525,7 +525,7 @@ def format VectorIntMaskFormat(code, category, *flags) {{
         code = eiDeclarePrefix(code)
     
     if(inst_name in ["vconv"]):
-        code = loopMergeWrapper(code, micro_inst=False)
+        code = loopMergeWrapper(code)
     else:
         code = loopWrapper(code)
 
