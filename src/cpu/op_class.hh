@@ -68,6 +68,7 @@ static const OpClass SimdAddOp = enums::SimdAdd;
 static const OpClass SimdAddAccOp = enums::SimdAddAcc;
 static const OpClass SimdAluOp = enums::SimdAlu;
 static const OpClass SimdCmpOp = enums::SimdCmp;
+static const OpClass SimdMergeOp = enums::SimdMerge;
 static const OpClass SimdCvtOp = enums::SimdCvt;
 static const OpClass SimdMiscOp = enums::SimdMisc;
 static const OpClass SimdMultOp = enums::SimdMult;

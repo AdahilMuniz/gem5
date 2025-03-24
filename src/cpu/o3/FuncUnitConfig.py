@@ -120,6 +120,11 @@ class SIMD_Unit(FUDesc):
     ]
     count = 4
 
+class SIMD_Merge(FUDesc):
+    opList = [
+        OpDesc(opClass="SimdMerge"),
+    ]
+    count = 8
 
 class Matrix_Unit(FUDesc):
     opList = [

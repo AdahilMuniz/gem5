@@ -3038,7 +3038,7 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vu[(cnt)] = Vs2_vu[i] * Vs2_vu[j];
                             cnt ++;
                         }
-                    }}, OPIVV, SimdCmpOp);
+                    }}, OPIVV, SimdMergeOp);
                 }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wv({{
