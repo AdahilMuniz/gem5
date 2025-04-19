@@ -122,9 +122,9 @@ class SIMD_Unit(FUDesc):
 
 class SIMD_Merge(FUDesc):
     opList = [
-        OpDesc(opClass="SimdMerge"),
+        OpDesc(opClass="SimdMerge", opLat=16, pipelined=False),
     ]
-    count = 8
+    count = 1
 
 class Matrix_Unit(FUDesc):
     opList = [

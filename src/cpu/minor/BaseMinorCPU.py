@@ -229,6 +229,10 @@ class MinorDefaultFloatSimdFU(MinorFU):
     timings = [MinorFUTiming(description="FloatSimd", srcRegsRelativeLats=[2])]
     opLat = 6
 
+class MinorDefaultMergeSimdFU(MinorFU):
+    opClasses = minorMakeOpClassSet(["SimdMerge"])
+    timings = [MinorFUTiming(description="MergeSimd", srcRegsRelativeLats=[2])]
+    opLat = 16
 
 class MinorDefaultPredFU(MinorFU):
     opClasses = minorMakeOpClassSet(["SimdPredAlu"])
@@ -272,10 +276,10 @@ class MinorDefaultMiscFU(MinorFU):
 class MinorDefaultFUPool(MinorFUPool):
     funcUnits = [
         MinorDefaultIntFU(),
-        MinorDefaultIntFU(),
         MinorDefaultIntMulFU(),
         MinorDefaultIntDivFU(),
         MinorDefaultFloatSimdFU(),
+        MinorDefaultMergeSimdFU(),
         MinorDefaultPredFU(),
         MinorDefaultMemFU(),
         MinorDefaultMiscFU(),
