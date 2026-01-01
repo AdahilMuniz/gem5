@@ -257,6 +257,41 @@ class VectorSlideMicroInst : public VectorMicroInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+
+class VectorMergeMacroInst : public VectorMacroInst
+{
+  protected:
+    VectorMergeMacroInst(const char* mnem, ExtMachInst _machInst,
+                         OpClass __opClass, uint32_t _vlen = 256)
+        : VectorMacroInst(mnem, _machInst, __opClass, _vlen)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorMergeMicroInst : public VectorMicroInst
+{
+  protected:
+    uint32_t vdIdx;
+    uint32_t vs1Idx;
+    uint32_t vs2Idx;
+    VectorMergeMicroInst(const char *mnem, ExtMachInst _machInst,
+                         OpClass __opClass, uint32_t _microVl,
+                         uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs1Idx, uint32_t _vs2Idx)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx)
+        , vdIdx(_vdIdx), vs1Idx(_vs1Idx), vs2Idx(_vs2Idx)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+
+
+
 class VectorMemMicroInst : public VectorMicroInst
 {
   protected:

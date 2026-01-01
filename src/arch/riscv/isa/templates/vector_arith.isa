@@ -2449,3 +2449,142 @@ Fault
 %(declare_varith_template)s;
 
 }};
+
+
+def template VectorMergeMacroDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s {
+private:
+    %(reg_idx_arr_decl)s;
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
+
+def template VectorMergeMicroDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s
+{
+private:
+    // vs2, vs1, vs3(old_vd), vm for *.vv, *.vx
+    // vs2, (old_vd), vm for *.vi
+    RegId srcRegIdxArr[4];
+    RegId destRegIdxArr[1];
+    bool vm;
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+        uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs1Idx, uint32_t _vs2Idx);
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
+
+def template VectorMergeMacroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    %(constructor)s;
+    const uint32_t num_microops = vtype_regs_per_group(vtype);
+    int32_t tmp_vl = this->vl;
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
+    int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
+    StaticInstPtr microop;
+
+    if (micro_vl == 0) {
+        microop = new VectorNopMicroInst(_machInst);
+        this->microops.push_back(microop);
+    }
+    // Todo static filter out useless uop
+    int micro_idx = 0;
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        for (int j = 0; j < num_microops; ++j) {
+            for (int k = 0; k < num_microops; ++k) {
+                microop = new %(class_name)sMicro<ElemType>(
+                    _machInst, micro_vl, micro_idx++, i, j, k);
+                microop->setDelayedCommit();
+                this->microops.push_back(microop);
+            }
+        }
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+    }
+    this->microops.front()->setFirstMicroop();
+    this->microops.back()->setLastMicroop();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+
+def template VectorMergeMicroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _vdIdx,
+        uint32_t _vs1Idx, uint32_t _vs2Idx)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+        _microIdx, _vdIdx, _vs1Idx, _vs2Idx)
+{
+    this->vm = _machInst.vm;
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    %(set_dest_reg_idx)s;
+    %(set_src_reg_idx)s;
+}
+
+%(declare_varith_template)s;
+
+}};
+
+
+def template VectorMergeMicroExecute {{
+
+template<typename ElemType>
+Fault
+%(class_name)s<ElemType>::execute(ExecContext* xc,
+                                  trace::InstRecord* traceData) const
+{
+    using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
+    using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+    }
+
+    if (machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
+    [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
+
+    %(vm_decl_rd)s;
+    %(copy_old_vd)s;
+    %(code)s;
+    %(op_wb)s;
+
+    return NoFault;
+};
+
+%(declare_varith_template)s;
+
+}};

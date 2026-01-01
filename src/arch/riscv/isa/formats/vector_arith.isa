@@ -1617,3 +1617,71 @@ def format VectorFloatSlideDownFormat(code, category, *flags) {{
             decode_template = VectorFloatDecodeBlock,
             micro_execute_template = VectorFloatSlideMicroExecute)
 }};
+
+
+
+def format VectorMergeFormat(category, code, *flags) {{
+    macroop_class_name = 'VectorMergeMacroInst'
+    microop_class_name = 'VectorMergeMicroInst'
+
+    # Make sure flags are in lists (convert to lists if not).
+    flags = makeList(flags)
+
+    varith_macro_declare = declareVArithTemplate(Name)
+
+    iop = InstObjParams(
+        name,
+        Name,
+        macroop_class_name,
+       {'code': code,
+        'declare_varith_template': varith_macro_declare},
+        flags
+    )
+    inst_name, inst_suffix = name.split("_", maxsplit=1)
+    dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
+    src2_reg_id = "vecRegClass[_machInst.vs2 + vs2Idx]"
+    src1_ireg_id = "vecRegClass[_machInst.vs1 + vs1Idx]"
+
+    # The tail of vector mask inst should be treated as tail-agnostic.
+    # We treat it with tail-undisturbed policy, since
+    # the test suits only support undisturbed policy.
+    num_src_regs = 0
+
+    old_dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
+    set_src_reg_idx = ""
+    set_src_reg_idx += setSrcWrapper(src1_ireg_id)
+    num_src_regs += 1
+    set_src_reg_idx += setSrcWrapper(src2_reg_id)
+    num_src_regs += 1
+    old_vd_idx = num_src_regs
+    set_src_reg_idx += setSrcWrapper(old_dest_reg_id)
+    set_dest_reg_idx = setDestWrapper(dest_reg_id)
+    vm_decl_rd = vmDeclAndReadData()
+    set_src_reg_idx += setSrcVm()
+    set_vlenb = setVlenb()
+    set_vlen = setVlen()
+
+    varith_micro_declare = declareVArithTemplate(Name + "Micro")
+
+    microiop = InstObjParams(name + "_micro",
+        Name + "Micro",
+        microop_class_name,
+        {'code': code,
+         'set_dest_reg_idx': set_dest_reg_idx,
+         'set_src_reg_idx': set_src_reg_idx,
+         'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
+         'vm_decl_rd': vm_decl_rd,
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
+        flags)
+
+    header_output = \
+        VectorMergeMicroDeclare.subst(microiop) + \
+        VectorMergeMacroDeclare.subst(iop)
+    decoder_output = \
+        VectorMergeMicroConstructor.subst(microiop) + \
+        VectorMergeMacroConstructor.subst(iop)
+    exec_output = VectorMergeMicroExecute.subst(microiop)
+    decode_block = VectorIntDecodeBlock.subst(iop)
+}};

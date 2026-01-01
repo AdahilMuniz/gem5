@@ -214,6 +214,28 @@ std::string VectorSlideMacroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+std::string VectorMergeMicroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) <<  ", ";
+    ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+
+std::string VectorMergeMacroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+
 std::string VleMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {

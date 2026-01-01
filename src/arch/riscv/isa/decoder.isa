@@ -2985,13 +2985,25 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] <= Vs1_vi[i]));
                     }}, OPIVV, SimdCmpOp);
                 }
-                format VectorIntFormat {
+                format VectorMergeFormat {
                     0x16: vconv_vv({{
+                        /*
                         if(Vs1_vu[i] == Vs1_vu[j]){
                             Vd_vu[(cnt)] = Vs2_vu[i] * Vs2_vu[j];
                             cnt ++;
                         }
-                    }}, OPIVV, SimdCmpOp);
+                        */
+                       //const int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                       //const int numVs2s = vtype_regs_per_group(vtype);
+                       //Vd_vu[0] = microVl;
+                       //Vd_vu[1] = microVlmax;
+                       //Vd_vu[2] = numVs2s;
+                       //Vd_vu[3] = vdIdx;
+                       //Vd_vu[4] += vs1Idx;//6
+                       //Vd_vu[5] += vs2Idx;//6
+                       Vd_vu[0] = 0;
+
+                    }}, OPIVI, SimdCmpOp);
                 }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wv({{

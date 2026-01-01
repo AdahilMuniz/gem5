@@ -272,7 +272,6 @@ class MinorDefaultMiscFU(MinorFU):
 class MinorDefaultFUPool(MinorFUPool):
     funcUnits = [
         MinorDefaultIntFU(),
-        MinorDefaultIntFU(),
         MinorDefaultIntMulFU(),
         MinorDefaultIntDivFU(),
         MinorDefaultFloatSimdFU(),
